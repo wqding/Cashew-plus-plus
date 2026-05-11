@@ -26,7 +26,7 @@ import 'package:budget/pages/activityPage.dart';
 import 'package:flutter/material.dart' show RangeValues;
 part 'tables.g.dart';
 
-int schemaVersionGlobal = 46;
+int schemaVersionGlobal = 47;
 
 // To update and migrate the database, check the README
 
@@ -125,6 +125,7 @@ enum MethodAdded {
   csv,
   preview,
   appLink,
+  import,
 }
 
 enum SharedStatus { waiting, shared, error }
@@ -334,6 +335,10 @@ class Transactions extends Table {
       text().references(Objectives, #objectivePk).nullable()();
   TextColumn get budgetFksExclude =>
       text().map(const StringListInColumnConverter()).nullable()();
+  // Set only on rows created by the import-from-file feature.
+  // sha256(file_sha + page_index + line_index_or_ref); enables exact-match
+  // dedup when re-importing the same statement.
+  TextColumn get importFingerprint => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {transactionPk};
@@ -1161,6 +1166,17 @@ class FinanceDatabase extends _$FinanceDatabase {
               } catch (e) {
                 print(
                     "Migration Error: Error creating column objectives.type " +
+                        e.toString());
+              }
+            },
+            from46To47: (m, schema) async {
+              print("46 to 47");
+              try {
+                await m.addColumn(schema.transactions,
+                    schema.transactions.importFingerprint);
+              } catch (e) {
+                print(
+                    "Migration Error: Error creating column transactions.importFingerprint " +
                         e.toString());
               }
             },
