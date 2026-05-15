@@ -1,0 +1,26 @@
+{
+  "id": "generic_cc_pdf_v1",
+  "version": 1,
+  "display_name": "Generic credit card PDF",
+  "source_kind": "pdf",
+  "match": {
+    "keywords_all": [],
+    "keywords_any": ["$", "Statement", "Balance", "Payment"],
+    "filetypes": ["pdf"]
+  },
+  "row": {
+    "regex": "^(\\w{3}\\s+\\d{1,2},?\\s*\\d{0,4})\\s+(.+?)\\s+(-?[\\d,]+\\.\\d{2})\\s*$",
+    "fields": {
+      "trans_date": { "group": 1, "kind": "date_mdy" },
+      "merchant":   { "group": 2, "kind": "string" },
+      "amount":     { "group": 3, "kind": "amount" }
+    },
+    "rules": []
+  },
+  "skip_when": {
+    "any_substring": ["Opening Balance", "Closing Balance", "Previous Balance", "Payment Due", "Minimum Payment", "Annual Fee"]
+  },
+  "validation": {
+    "totals": {}
+  }
+}

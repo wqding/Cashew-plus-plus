@@ -102,7 +102,11 @@ dependencies:
   expandable_page_view: ^1.0.17
   flutter_staggered_grid_view: ^0.7.0
   flutter_colorpicker: ^1.1.0
-  
+  # Import feature dependencies (M3)
+  google_mlkit_text_recognition: ^0.13.0
+  syncfusion_flutter_pdf: ^25.1.41
+  crypto: ^3.0.3
+
 # flutter pub run flutter_launcher_icons:main
 flutter_icons:
   android: true
@@ -152,6 +156,9 @@ flutter:
     - assets/static/generated/
     - assets/static/generated/currencies.json
     - assets/static/language-names.json
+    # Import feature assets (M3)
+    - assets/import/profiles/
+    - assets/import/merchant_categories.json
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

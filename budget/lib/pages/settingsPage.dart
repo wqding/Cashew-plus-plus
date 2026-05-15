@@ -612,6 +612,8 @@ class SettingsPageContent extends StatelessWidget {
 
         ImportCSV(),
 
+        ImportTransactionsSettings(),
+
         SettingsHeader(title: "backups".tr()),
 
         ExportDB(),
@@ -1799,6 +1801,68 @@ class FirstDayOfWeekSetting extends StatelessWidget {
         if (item == "0") return weekDayNames[0];
         if (item == "1") return weekDayNames[1];
       },
+    );
+  }
+}
+
+/// Settings block for the "Import from file" feature (T7d).
+///
+/// LLM controls are shown as disabled widgets in M3; they become active in M4.
+class ImportTransactionsSettings extends StatefulWidget {
+  const ImportTransactionsSettings({super.key});
+
+  @override
+  State<ImportTransactionsSettings> createState() =>
+      _ImportTransactionsSettingsState();
+}
+
+class _ImportTransactionsSettingsState
+    extends State<ImportTransactionsSettings> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SettingsHeader(title: "Import"),
+        SettingsContainerSwitch(
+          title: "Skip CC payments",
+          description:
+              'Exclude payment rows (e.g. "Payment from chequing account") when importing.',
+          onSwitched: (value) {
+            updateSettings("import_includeCcPayments", !value,
+                updateGlobalState: false);
+          },
+          initialValue:
+              !(appStateSettings["import_includeCcPayments"] as bool? ?? false),
+          icon: Icons.credit_card_off_outlined,
+        ),
+        SettingsContainerSwitch(
+          title: "Skip interest & fees",
+          description:
+              "Exclude interest charges and bank fee rows when importing.",
+          onSwitched: (value) {
+            updateSettings("import_includeFees", !value,
+                updateGlobalState: false);
+          },
+          initialValue:
+              !(appStateSettings["import_includeFees"] as bool? ?? false),
+          icon: Icons.percent_outlined,
+        ),
+        // LLM controls — stubbed in M3, activated in M4.
+        Opacity(
+          opacity: 0.45,
+          child: SettingsContainerSwitch(
+            title: "Enable LLM assistance",
+            description:
+                "Use an on-device model to learn unknown statement formats. "
+                "Download the model first (M4).",
+            onSwitched: (_) {},
+            initialValue:
+                appStateSettings["import_llmEnabled"] as bool? ?? true,
+            icon: Icons.auto_awesome_outlined,
+          ),
+        ),
+      ],
     );
   }
 }

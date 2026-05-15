@@ -1,0 +1,48 @@
+{
+  "id": "wealthsimple_pdf_v1",
+  "version": 2,
+  "display_name": "Wealthsimple credit card PDF",
+  "source_kind": "pdf",
+  "match": {
+    "keywords_all": ["Wealthsimple"],
+    "keywords_any": ["Activity", "TRANS. DATE", "POSTED DATE", "Credit card statement"],
+    "filetypes": ["pdf"]
+  },
+  "period": {
+    "regex": "(\\w{3}\\s+\\d{1,2}(?:,?\\s+\\d{4})?)\\s*[-–—]\\s*(\\w{3}\\s+\\d{1,2},?\\s+\\d{4})",
+    "year_strategy": "from_period_end"
+  },
+  "section": {
+    "start_regex": "TRANS\\. DATE",
+    "end_regex": "Information about your Wealthsimple"
+  },
+  "row": {
+    "regex": "^(\\w{3}\\s+\\d{1,2})\\s+(\\w{3}\\s+\\d{1,2})\\s+(Purchase|Payment|Refund|Credit|Interest|Fee|Reward)\\s+(.+?)\\s+[–—\\-]?\\$?([\\d,\\s]+\\.\\d{2})\\s*$",
+    "fields": {
+      "trans_date": { "group": 1, "kind": "date_md" },
+      "post_date":  { "group": 2, "kind": "date_md" },
+      "type":       { "group": 3, "kind": "string" },
+      "merchant":   { "group": 4, "kind": "string" },
+      "amount":     { "group": 5, "kind": "amount" }
+    },
+    "rules": []
+  },
+  "skip_when": {
+    "any_substring": [
+      "TRANS. DATE",
+      "POSTED DATE",
+      "AMOUNT ($CAD)",
+      "Activity",
+      "Page ",
+      "Wealthsimple Payments Inc",
+      "Credit card statement",
+      "--- PAGE"
+    ]
+  },
+  "validation": {
+    "totals": {
+      "purchases_field_regex": "\\+\\s*Purchases\\s+\\$?([\\d,]+\\.\\d{2})",
+      "credits_field_regex": "Total payments/credits\\s+[\\-–—]?\\$?([\\d,]+\\.\\d{2})"
+    }
+  }
+}

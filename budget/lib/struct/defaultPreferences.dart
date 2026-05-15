@@ -328,6 +328,14 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
 
     // This key is used as a migration
     // "migratedSetLongTermLoansAmountTo0": false,
+
+    // Import feature settings (T7d)
+    "import_defaultWalletPk": null,
+    "import_defaultCategoryPk": null,
+    "import_includeCcPayments": false,
+    "import_includeFees": false,
+    "import_llmEnabled": true,
+    "import_modelStatus": "absent", // "absent" | "downloading" | "ready" | "error"
   };
 }
 

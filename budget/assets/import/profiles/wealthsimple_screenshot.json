@@ -1,0 +1,30 @@
+{
+  "id": "wealthsimple_screenshot_v1",
+  "version": 3,
+  "display_name": "Wealthsimple activity screenshot",
+  "source_kind": "image",
+  "match": {
+    "keywords_all": ["Wealthsimple"],
+    "keywords_any": ["CAD", "Purchase", "Pending"],
+    "filetypes": ["image"]
+  },
+  "row": {
+    "regex": "^(.+?)(?:\\s+(Purchase|Payment|Refund|Credit|Refunded)\\s+Credit\\s*card.*?)?\\s+[-–—]?\\s*\\$?([\\d,]+\\.\\d{2})\\s*CAD",
+    "fields": {
+      "merchant": { "group": 1, "kind": "string" },
+      "type":     { "group": 2, "kind": "string" },
+      "amount":   { "group": 3, "kind": "amount" }
+    },
+    "rules": []
+  },
+  "skip_when": {
+    "any_substring": [
+      "Account balance",
+      "Available credit",
+      "Pending purchases"
+    ]
+  },
+  "validation": {
+    "totals": {}
+  }
+}

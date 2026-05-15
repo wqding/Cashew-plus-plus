@@ -159,10 +159,16 @@ class RowRule {
   // emitted draft. Format intentionally minimal for v1.
   final List<Map<String, dynamic>> rules;
 
+  /// When > 1, consecutive non-empty lines are joined (with '\n') into windows
+  /// of this size before the row regex is attempted. Use for sources like
+  /// Wealthsimple screenshots where one transaction spans multiple text lines.
+  final int windowSize;
+
   const RowRule({
     required this.regex,
     required this.fields,
     this.rules = const [],
+    this.windowSize = 1,
   });
 
   factory RowRule.fromJson(Map<String, dynamic> j) {
@@ -174,6 +180,7 @@ class RowRule {
       ),
       rules: ((j['rules'] as List?) ?? const [])
           .cast<Map<String, dynamic>>(),
+      windowSize: j['window_size'] as int? ?? 1,
     );
   }
 
@@ -181,6 +188,7 @@ class RowRule {
         'regex': regex,
         'fields': fields.map((k, v) => MapEntry(k, v.toJson())),
         if (rules.isNotEmpty) 'rules': rules,
+        if (windowSize != 1) 'window_size': windowSize,
       };
 }
 
