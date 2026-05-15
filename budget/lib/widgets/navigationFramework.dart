@@ -37,6 +37,7 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/shareBudget.dart';
 import 'package:budget/struct/syncClient.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
+import 'package:budget/widgets/addTransactionTypeChooser.dart';
 import 'package:budget/widgets/bottomNavBar.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/categoryIcon.dart';
@@ -519,9 +520,15 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
             key: ValueKey(1),
             fab: AddFAB(
               tooltip: "add-transaction".tr(),
-              openPage: AddTransactionPage(
-                routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-              ),
+              onTap: () {
+                openBottomSheet(
+                  context,
+                  PopupFramework(
+                    title: "Add transaction",
+                    child: const AddTransactionTypeChooser(),
+                  ),
+                );
+              },
             ),
             condition: [0, 1, 2, 14].contains(currentPage),
           ),
