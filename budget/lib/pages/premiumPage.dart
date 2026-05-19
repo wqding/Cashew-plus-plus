@@ -3,7 +3,6 @@ import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/struct/databaseGlobal.dart';
-import 'package:budget/struct/defaultPreferences.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
@@ -18,12 +17,10 @@ import 'package:budget/widgets/statusBox.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/transactionEntry/transactionEntry.dart';
-import 'package:budget/widgets/viewAllTransactionsButton.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sa3_liquid/sa3_liquid.dart';
-import 'package:budget/widgets/openContainerNavigation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 bool premiumPopupEnabled = kIsWeb == false;
@@ -715,9 +712,8 @@ showHelpRestorePopup(BuildContext context) {
 }
 
 bool hidePremiumPopup() {
-  return premiumPopupEnabled == false ||
-      appStateSettings["purchaseID"] != null ||
-      appStateSettings["previewDemo"] == true;
+  // All Cashew Pro gating is disabled — every feature is unblocked.
+  return true;
 }
 
 Future<bool> premiumPopupPushRoute(BuildContext context) async {
@@ -776,39 +772,7 @@ Future<bool> premiumPopupPastBudgets(BuildContext context) async {
 }
 
 Future premiumPopupAddTransaction(BuildContext context) async {
-  if (hidePremiumPopup()) return true;
-
-  print("Checking premium before adding transaction - " +
-      appStateSettings["premiumPopupAddTransactionCount"].toString());
-
-  try {
-    DateTime.parse(appStateSettings["premiumPopupAddTransactionLastShown"]);
-  } catch (e) {
-    print("Error parsing date for premium popup, resetting...");
-    updateSettings(
-        "premiumPopupAddTransactionLastShown", DateTime.now().toString(),
-        updateGlobalState: false);
-  }
-
-  if (DateTime.parse(appStateSettings["premiumPopupAddTransactionLastShown"])
-          .add(Duration(days: 1))
-          .isBefore(DateTime.now()) &&
-      appStateSettings["premiumPopupAddTransactionCount"] > 5) {
-    updateSettings("premiumPopupAddTransactionCount", 0,
-        updateGlobalState: false);
-    updateSettings(
-        "premiumPopupAddTransactionLastShown", DateTime.now().toString(),
-        updateGlobalState: false);
-    await pushRoute(
-      context,
-      PremiumPage(
-        popRouteWithPurchase: true,
-        canDismiss: true,
-      ),
-    );
-  }
-
-  // Always return true, this is not an enforced feature
+  // Cashew Pro reminder disabled.
   return true;
 }
 
@@ -1195,21 +1159,10 @@ class LockedFeature extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget child = IgnorePointer(child: this.child);
-    if (showLock)
-      child = Stack(
-        alignment: AlignmentDirectional.center,
-        children: [
-          IgnorePointer(child: this.child),
-          Icon(appStateSettings["outlinedIcons"]
-              ? Icons.lock_outlined
-              : Icons.lock_rounded),
-        ],
-      );
+    // Cashew Pro locking is disabled — feature is freely available.
     return Tappable(
       onTap: () async {
-        bool result = await premiumPopupPushRoute(context);
-        if (actionAfter != null && result == true) actionAfter!();
+        if (actionAfter != null) actionAfter!();
       },
       borderRadius: 20,
       color: Colors.transparent,
@@ -1218,7 +1171,7 @@ class LockedFeature extends StatelessWidget {
   }
 }
 
-class FadeOutAndLockFeature extends StatefulWidget {
+class FadeOutAndLockFeature extends StatelessWidget {
   const FadeOutAndLockFeature({
     required this.child,
     this.actionAfter,
@@ -1232,88 +1185,9 @@ class FadeOutAndLockFeature extends StatefulWidget {
   final bool fadeOutQuick;
 
   @override
-  State<FadeOutAndLockFeature> createState() => _FadeOutAndLockFeatureState();
-}
-
-class _FadeOutAndLockFeatureState extends State<FadeOutAndLockFeature> {
-  bool fadeIn = false;
-  bool dismissedPremium = false;
-
-  @override
-  void initState() {
-    Future.delayed(Duration.zero, () {
-      if (hidePremiumPopup() == false)
-        setState(() {
-          fadeIn = true;
-        });
-    });
-    super.initState();
-  }
-
-  void openPremiumPopup() async {
-    bool result = await premiumPopupPushRoute(context);
-    if (result == true) {
-      if (widget.actionAfter != null) widget.actionAfter!();
-      setState(() {
-        dismissedPremium = true;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (hidePremiumPopup() ||
-        dismissedPremium ||
-        widget.hasInitiallyDismissed) {
-      return widget.child;
-    }
-    return Tappable(
-      color: Colors.transparent,
-      borderRadius: 15,
-      onTap: openPremiumPopup,
-      child: Stack(
-        alignment: AlignmentDirectional.center,
-        children: [
-          IgnorePointer(
-            child: AnimatedOpacity(
-              opacity: fadeIn ? 0.23 : 1,
-              duration: widget.fadeOutQuick
-                  ? Duration(milliseconds: 0)
-                  : Duration(milliseconds: 5000),
-              child: AnimatedOpacity(
-                opacity: fadeIn ? 0.25 : 1,
-                duration: Duration(milliseconds: 500),
-                child: widget.child,
-              ),
-            ),
-          ),
-          AnimatedOpacity(
-            opacity: fadeIn ? 1 : 0,
-            duration: Duration(milliseconds: 500),
-            child: Column(
-              children: [
-                TextFont(
-                  text: "unlock-with".tr(),
-                  fontSize: 15,
-                ),
-                SizedBox(height: 5),
-                CashewProBanner(fontColor: getColor(context, "black")),
-                SizedBox(height: 15),
-                LowKeyButton(
-                  onTap: openPremiumPopup,
-                  text: "learn-more".tr().capitalizeFirstofEach,
-                  color: dynamicPastel(
-                    context,
-                    Theme.of(context).colorScheme.secondaryContainer,
-                    amount: 0.4,
-                  ).withOpacity(0.8),
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    // Cashew Pro fade/lock overlay disabled — feature is freely available.
+    return child;
   }
 }
 
@@ -1402,140 +1276,7 @@ class PremiumBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb) return SizedBox.shrink();
-    double borderRadius = 15;
-    bool purchased = appStateSettings["purchaseID"] != null;
-
-    return Container(
-      decoration: BoxDecoration(
-          boxShadow: boxShadowSharp(context),
-          borderRadius: BorderRadiusDirectional.circular(borderRadius)),
-      margin: const EdgeInsetsDirectional.symmetric(horizontal: 9, vertical: 0),
-      child: OpenContainerNavigation(
-        borderRadius: borderRadius,
-        openPage: PremiumPage(canDismiss: true, popRouteWithPurchase: false),
-        closedColor: Theme.of(context).brightness == Brightness.light
-            ? Theme.of(context).colorScheme.secondaryContainer
-            : Theme.of(context).colorScheme.secondary,
-        button: (openContainer) {
-          return Tappable(
-            color: Colors.transparent,
-            borderRadius: borderRadius,
-            onTap: () {
-              if (kIsWeb)
-                openUrl("https://ko-fi.com/dapperappdeveloper");
-              else
-                openContainer();
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadiusDirectional.circular(15),
-              child: IntrinsicHeight(
-                child: Stack(
-                  children: [
-                    Opacity(
-                      opacity: Theme.of(context).brightness == Brightness.light
-                          ? 0.7
-                          : 0.9,
-                      child: PremiumBackground(
-                        purchased: purchased,
-                        disableAnimation: appStateSettings["appAnimations"] !=
-                                AppAnimations.all.index ||
-                            getPlatform() == PlatformOS.isIOS ||
-                            kIsWeb ||
-                            appStateSettings["batterySaver"] == true,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                          start: 25, end: 17, top: 17, bottom: 17),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    CashewProBanner(),
-                                    purchased
-                                        ? Container(
-                                            margin:
-                                                EdgeInsetsDirectional.symmetric(
-                                                    horizontal: 5),
-                                            padding:
-                                                EdgeInsetsDirectional.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 5),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .secondaryContainer,
-                                              borderRadius:
-                                                  BorderRadiusDirectional
-                                                      .circular(100),
-                                              boxShadow:
-                                                  boxShadowGeneral(context),
-                                            ),
-                                            child: TextFont(
-                                              text: appStateSettings[
-                                                          "purchaseID"] ==
-                                                      productIDs["lifetime"]
-                                                  ? "lifetime".tr()
-                                                  : "active".tr(),
-                                              textColor: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSecondaryContainer
-                                                  .withOpacity(0.8),
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          )
-                                        : SizedBox.shrink(),
-                                  ],
-                                ),
-                                purchased
-                                    ? SizedBox.shrink()
-                                    : Row(
-                                        children: [
-                                          Flexible(
-                                            child: TextFont(
-                                              text: "budget-like-a-pro".tr() +
-                                                  " " +
-                                                  globalAppName +
-                                                  " " +
-                                                  "Pro",
-                                              fontSize: 15,
-                                              maxLines: 3,
-                                              textColor: Colors.black,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                              ],
-                            ),
-                          ),
-                          appStateSettings["purchaseID"] != null
-                              ? SizedBox.shrink()
-                              : Icon(
-                                  appStateSettings["outlinedIcons"]
-                                      ? Icons.arrow_forward_ios_outlined
-                                      : Icons.arrow_forward_ios_rounded,
-                                  color: Colors.black,
-                                  size: 20,
-                                )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    // Cashew Pro banner removed — every feature is unblocked.
+    return SizedBox.shrink();
   }
 }
