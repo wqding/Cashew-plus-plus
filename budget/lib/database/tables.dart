@@ -1194,6 +1194,19 @@ class FinanceDatabase extends _$FinanceDatabase {
           // The column already existed
         }
 
+        // The fork bumped schemaVersion 46->47 to add importFingerprint, but
+        // upstream Cashew has independently moved to 47 with different
+        // changes. A .sql exported by upstream has user_version=47, so
+        // drift sees from==to and skips from46To47 entirely, leaving the
+        // column missing. Add it defensively here.
+        try {
+          final m = createMigrator();
+          await m.addColumn(transactions, transactions.importFingerprint);
+          print("Migration successfully fixed importFingerprint");
+        } catch (e) {
+          // The column already existed
+        }
+
         if (details.hadUpgrade && details.versionBefore != null) {
           print(
               "Migration Version Before: " + details.versionBefore.toString());
